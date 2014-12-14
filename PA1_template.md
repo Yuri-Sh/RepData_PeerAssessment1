@@ -10,7 +10,6 @@ Since this study relies upon certain R packages, the missing packages will be
 automatically installed from the default repository (this is the [reference](http://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them) to the trick.
 
 
-
 ```r
 list.of.packages <- list("data.table", 
                          "lubridate","ggplot2","grid","gridExtra","scales",
@@ -98,7 +97,7 @@ Plotting with 2 bin sizes (smaller bins help to see the days with zero or top ac
 
 ```r
 fineHist<-qplot(nsteps,data=dailyStepsSummary, geom="histogram", 
-                binwidth=5000, main="Daily steps (Bin width = 5000)")
+                binwidth=5000, main="Daily steps (Bin width = 5000)", xlab="Steps count", ylab="Day count")
 roughHist<-qplot(nsteps,data=dailyStepsSummary, geom="histogram", 
                  binwidth=1000,main="Daily steps (Bin width = 1000)", xlab="Steps count", ylab="Day count")
 grid.arrange(fineHist, roughHist, ncol=2, nrow=1)
@@ -114,7 +113,7 @@ print(xtable(stepsummary), type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 00:26:37 2014 -->
+<!-- Mon Dec 15 01:09:48 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> Mean </th> <th> Median </th>  </tr>
   <tr> <td align="right"> Number of steps per day </td> <td align="right"> 10766.19 </td> <td align="right"> 10765.00 </td> </tr>
@@ -131,10 +130,6 @@ activityTblClean <- activitytbl %>%
 dailyActivityPattern<-activityTblClean %>% 
     group_by(interval) %>% 
     summarise(nsteps_per_interval=mean(steps, na.rm = TRUE))
-
-timeseq<-seq.POSIXt(as.POSIXct(zeroday), as.POSIXct(zeroday+days(1)), by = "5 min")
-dtTime <- head(timeseq,288)
-
 
 handleStyleAndTime <- function(plt) {
     plt +
@@ -162,15 +157,18 @@ handleStyleAndTime(plt)
 
 ```r
 peakinterval <- (dailyActivityPattern %>% arrange(desc(nsteps_per_interval)))$interval[1]
+```
 
-cat(sprintf("Peak activity (numer of steps) 5 min interval time=% 2d:%02d",
+**Daily peak interval (result):**
+
+
+```r
+cat(sprintf("Peak activity (numer of steps) 5 min interval time: % 2d:%02d",
               peakinterval%/%100,peakinterval%%100))
 ```
 
-Peak activity (numer of steps) 5 min interval time= 8:35
+Peak activity (numer of steps) 5 min interval time:  8:35
 
-
-## Imputing missing values
 
 #The analysis of the missing data.
 
@@ -200,7 +198,7 @@ print(xtable(as.data.frame(daysWithMissingData)),type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 00:26:38 2014 -->
+<!-- Mon Dec 15 01:09:49 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> date </th> <th> NAsperday </th> <th> weekday </th>  </tr>
   <tr> <td align="right"> 1 </td> <td> 2012-10-01 </td> <td align="right"> 288 </td> <td> Monday </td> </tr>
@@ -238,7 +236,7 @@ print(xtable(as.data.frame(daysActuallyInDataSet)),type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 00:26:38 2014 -->
+<!-- Mon Dec 15 01:09:49 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> WeekdayName </th> <th> count </th>  </tr>
   <tr> <td align="right"> 1 </td> <td> Friday </td> <td align="right">   7 </td> </tr>
@@ -295,13 +293,14 @@ Now we can recreate the daily steps histogram using the corrected data:
 
 ```r
 fineHist<-qplot(nsteps,data=dailyStepsSummary, geom="histogram", 
-                binwidth=5000, main="Daily steps (Bin width = 5000)")
+                binwidth=5000, main="Daily steps (Bin width = 5000)", xlab="Steps count", ylab="Day count")
 roughHist<-qplot(nsteps,data=dailyStepsSummary, geom="histogram", 
-                 binwidth=1000,main="Daily steps (Bin width = 1000)")
+                 binwidth=1000,main="Daily steps (Bin width = 1000)", xlab="Steps count", ylab="Day count")
 grid.arrange(fineHist, roughHist, ncol=2, nrow=1)
 ```
 
 ![plot of chunk Mean number of steps per day histogram for imputed data](figure/Mean number of steps per day histogram for imputed data-1.png) 
+
 We can notice that the histogram has moved to the left compared to the histogram based on the raw data, 
 i.e. there are now more days with less physical activity in the corrected dataset.
 
@@ -313,7 +312,7 @@ print(xtable(stepsummary), type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 00:26:38 2014 -->
+<!-- Mon Dec 15 01:09:49 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> Mean </th> <th> Median </th>  </tr>
   <tr> <td align="right"> Number of steps per day </td> <td align="right"> 9704.66 </td> <td align="right"> 10395.00 </td> </tr>
@@ -357,9 +356,9 @@ handleStyleAndTime(p1)
 
 **The conclusions:**
 
-- During the regular weekdays the object of study typically starts walking activity (possible hypothesis: gets up) about 5:30 a.m. and (as mentioned above) the peak of daily walking activity (number of steps per 5 minute interval) is observed between 8:35 AM and 8:40 a.m. There are additional secondary peaks after 12:00 p.m (one possible hypothesis: lunch time)about 16:00 p.m., about 17:30 pm (the possible hypothesis: end of the working day can differ) and around 19:00 p.m. (there could be various explanations).
+- During the regular weekdays the object of study typically starts walking activity (possible hypothesis: gets up) about 5:30 a.m. and (as mentioned above) the peak of daily walking activity (number of steps per 5 minute interval) is observed between 8:35 AM and 8:40 a.m. There are additional secondary peaks after 12:00 p.m (one possible hypothesis: lunch time) about 16:00 p.m., about 17:30 pm (the possible hypothesis: end of the working day can differ) and around 19:00 p.m. (there could be various explanations).
    
-- During the weekend days the pattern is different: the day activities more frequently  start after 8:00 a.m.,  there are multiple peaks of activities (walking) not only during the morning hours, but during the afternoon and evening hours, i.e. the weekend walking activity is distributed more evenly during the day hours.
+- During the weekend days the pattern is different: the day activities more frequently  start after 8:00 a.m.,  there are multiple peaks of activities (walking) not only during the morning hours, but during the afternoon and evening hours, i.e. the weekend walking activity is distributed more evenly during the day hours. There is some activity peak between 20:00 p.m. and 21:00 p.m. during weekend days which is not present during the regular week days.
 
 
 
