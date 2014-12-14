@@ -1,25 +1,276 @@
 ---
 title: "Reproducible Research: Peer Assessment 1"
 output: 
-  html_document:
-    keep_md: true
+html_document:
+keep_md: true
 ---
+
+## Checking pre-requisites
+Since this study relies upon certain R packages, the missing packages will be 
+automatically installed from the default repository (this is the [reference](http://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them) to the trick.
+
+
+```{r Checking pre-requisites, results='hide'}
+
+list.of.packages <- list("data.table", 
+                         "lubridate","ggplot2","grid","gridExtra","scales",
+                         "xtable","dplyr","tidyr")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+librarystr <- function(libname) { invisible(eval(parse(text=sprintf("library(%s)",libname)))) }
+lapply(list.of.packages,librarystr)
+
+```
+
+For the safety purposes, e.g. missing the source datasource activity.zip or in case the script runs in a wrong 
+directory, there is a code which can download the zip file from the original site.
+
+```{r Load and preprocess}
+
+# The local  zip file
+zipfile<-"activity.zip"
+# Extract the source datafile inside the downloaded zip file
+datafile<-"activity.csv"
+
+# Download only if the zip file is missing (formally not required)
+if ( !file.exists(zipfile) ) {
+    url<-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+    download.file(url,zipfile, mode="wb")
+    }
+```
 
 
 ## Loading and preprocessing the data
 
 
+The read.csv keeps default behavior(*stringsAsFactors=TRUE*) since this way it 
+is easier to summarize daily activities. 
 
+```{r Read and review the raw data}
+# Actually reading the data and converting to data.table
+activitytbl<-tbl_df(read.csv(
+    unz(filename=datafile,description = "./activity.zip"),
+    stringsAsFactors=TRUE))
+activitytbl
+```
+
+Preprocessing adds extra columns related to the date and time for future use.
+First we define the transformation for the timestamps.
+*Note: the dates and daytime will be handled separately in the code below.
+```{r Preprocess and review}
+zeroday<-ymd("1970-01-01")
+toTime <- function(interval) {
+    as.POSIXct(zeroday+hours(interval%/%100)+minutes(interval%%100))
+    }
+
+
+# Convert the dates, but keep the original dates as factors
+activitytbl<-activitytbl %>% mutate(datevar=ymd(activitytbl$date), timevar=toTime(interval))
+
+dailyActivity<-activitytbl   %>% 
+    dplyr::filter(!is.na(steps))    %>% 
+    group_by(date)  
+
+
+dailyStepsSummary <- dailyActivity  %>%  summarise(nsteps=sum(steps))
+
+```
 ## What is mean total number of steps taken per day?
 
+Plotting with 2 bin sizes (smaller bins help to see the days with zero or top activity, larger bins show better the smoothered distribution )
+```{r MeanNumberOfStepsPerDayHistogram}
+
+fineHist<-qplot(nsteps,data=dailyStepsSummary, geom="histogram", 
+                binwidth=5000, main="Daily steps (Bin width = 5000)")
+roughHist<-qplot(nsteps,data=dailyStepsSummary, geom="histogram", 
+                 binwidth=1000,main="Daily steps (Bin width = 1000)", xlab="Steps count", ylab="Day count")
+grid.arrange(fineHist, roughHist, ncol=2, nrow=1)
+
+```
+
+```{r NumberOfStepsPerDaySummary,results="asis"}
+stepsummary <- dailyStepsSummary %>% summarize(Mean=mean(nsteps),Median=median(nsteps)) %>% as.data.frame.array
+rownames(stepsummary)<-c("Number of steps per day")
+print(xtable(stepsummary), type="html")
+```
 
 
 ## What is the average daily activity pattern?
 
+```{r average daily activity pattern,results="asis"}
+
+activityTblClean <- activitytbl %>% 
+    dplyr::filter(!is.na(steps)) # %>%  # Remove NAs
+
+dailyActivityPattern<-activityTblClean %>% 
+    group_by(interval) %>% 
+    summarise(nsteps_per_interval=mean(steps, na.rm = TRUE))
+
+timeseq<-seq.POSIXt(as.POSIXct(zeroday), as.POSIXct(zeroday+days(1)), by = "5 min")
+dtTime <- head(timeseq,288)
+
+
+handleStyleAndTime <- function(plt) {
+    plt +
+    #theme_bw() +
+    theme(
+        plot.background = element_blank()
+        #,panel.grid.major = element_blank()
+        #,panel.grid.minor = element_blank(
+        ,panel.border = element_blank()
+        ,axis.text.x=element_text(angle=90)
+        )+
+    scale_x_datetime(breaks=date_breaks("1 hour"), 
+                     minor_breaks=date_breaks("1 hour"),
+                     labels =date_format("%H:%M") )
+}
+
+plt<-qplot(x=toTime(interval), y=nsteps_per_interval, 
+      data=dailyActivityPattern,geom="line",
+      ylab="Number of steps per 5 min interval", 
+      xlab="Interval") 
+handleStyleAndTime(plt)    
+
+peakinterval <- (dailyActivityPattern %>% arrange(desc(nsteps_per_interval)))$interval[1]
+
+cat(sprintf("Peak activity (numer of steps) 5 min interval time=% 2d:%02d",
+              peakinterval%/%100,peakinterval%%100))
+
+```
 
 
 ## Imputing missing values
 
+#The analysis of the missing data.
+```{r missing values in the dataset,results="asis"}
+
+numberOfMissingValues<-sum(!complete.cases(activitytbl))
+cat(sprintf("Number of missing values in the dataset: %d", numberOfMissingValues))
+
+#Summary of missing days: 
+
+cat("Summary of all dates with missing data:")
+daysWithMissingData <- activitytbl %>% 
+    dplyr::filter(is.na(steps)) %>% 
+    group_by(date)       %>% 
+    summarise(NAsperday=n()) %>%  
+    mutate(weekday=weekdays(ymd(date)))
+
+print(xtable(as.data.frame(daysWithMissingData)),type="html")
+cat(sprintf("Missing days (to be imputed): %d days out of total %d days", 
+            nrow(daysWithMissingData), length(unique(as.character(activitytbl$date))) ))
+```
+
+Let's note for the future discussion, that there are more missing weekdays, than missing weekend days in the dataset.
+
+```{r Days represented in the dataset,results="asis"}
+actualDates<-activitytbl %>% dplyr::filter(complete.cases(.)) %>% select(date) %>% unique(.) 
+cat("Which weekdays are represented in the dataset?")
+daysActuallyInDataSet <- actualDates %>%   
+                         group_by(WeekdayName=weekdays(ymd(date))) %>% 
+                         summarise(count=n())
+print(xtable(as.data.frame(daysActuallyInDataSet)),type="html")
+```
+
+Now let's mark the weekday type for each observation.
+```{r Add weekdaytype factor,results="asis"}
+# Add new column as suggested in the assignment with factor discriminating weekend day and weekdays 
+weekendays<-c('Saturday', 'Sunday')
+extendedActivityTbl <- activitytbl %>%    
+           mutate(WeekDay=as.factor(weekdays(datevar)),
+                  weekdaytype=as.factor(
+                      ifelse(WeekDay %in% weekendays,"weekend","weekday" ) 
+                      )
+                  )
+
+```
+
+As the tables be seen above, there are no days with incomplete monitoring data:
+there are either 0 valid observations (only NA's) or 24*12=288 valid observations per day
+In order to facilitate more correct analysis of the comparison of the weekday pattern we can adopt 
+the following strategy for filling in all of the missing values in the dataset :
+
+- separate the data according to the type of the weekday (regular weekday and weekend);
+
+- for each interval of the respective date type calculate the median per each 5 min interval;
+
+- for each missing time interval in respective daytype imput the median(daytype,interval).   
+
+```{r actual imputing,results="asis"}
+# We will try to repair here each weekday separately in order not to distort statistics
+summarizeIntervalsPerWeekday <- extendedActivityTbl %>%                                     
+                                group_by(WeekDay,interval ) %>% 
+                                summarize(actPerWDandIntrv=median(steps, na.rm = TRUE))
+                                
+extendedActivityTblRepaired <- 
+    inner_join(x=extendedActivityTbl, 
+               y=summarizeIntervalsPerWeekday, 
+               by=c("WeekDay","interval")) %>% 
+    mutate(steps=ifelse(is.na(steps),actPerWDandIntrv,steps));
+
+# It would be better to merge this duplicate code with the prototype above
+dailyActivity<-extendedActivityTblRepaired   %>%  group_by(date)  
+dailyStepsSummary <- dailyActivity  %>%  summarise(nsteps=sum(steps))
+
+```
+Now we can recreate the daily steps histogram using the corrected data:
+```{r MeanNumberOfStepsPerDayHistogram1,results="asis"}
+
+fineHist<-qplot(nsteps,data=dailyStepsSummary, geom="histogram", 
+                binwidth=5000, main="Daily steps (Bin width = 5000)")
+roughHist<-qplot(nsteps,data=dailyStepsSummary, geom="histogram", 
+                 binwidth=1000,main="Daily steps (Bin width = 1000)")
+grid.arrange(fineHist, roughHist, ncol=2, nrow=1)
+
+```
+We can notice that the histogram has moved to the left compared to the histogram based on the raw data, 
+i.e. there are now more days with less physical activity in the corrected dataset.
+
+```{r NumberOfStepsPerDaySummary1,results="asis"}
+stepsummary <- dailyStepsSummary %>% summarize(Mean=mean(nsteps),Median=median(nsteps)) %>% as.data.frame.array
+rownames(stepsummary)<-c("Number of steps per day")
+print(xtable(stepsummary), type="html")
+```
+
+Both mean and average have decreased compared to the raw data (with excluded missing days).
+As we mentioned earlier there were more missing weekdays than missing weekend days in the data.
+The following section shows the difference in the activity pattern in the 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+The following pair of graphs clearly show different activity patterns:
+```{r weekdays and weekends,results="asis"}
+summarizeIntervalsPerWeekdayType <- extendedActivityTblRepaired %>%
+                                group_by(weekdaytype,interval)  %>% 
+                                summarise(activityPerWeekdayTypeAndInterval=mean(steps, na.rm = TRUE)) 
+                                
+
+
+p <- ggplot(summarizeIntervalsPerWeekdayType,
+    aes(x=toTime(interval),y=activityPerWeekdayTypeAndInterval))+ geom_line() +
+    xlab("Daytime (by 5 min intervals)")+ ylab("Average number of steps per 5 min interval")
+handleStyleAndTime(p) + facet_grid(. ~ weekdaytype)
+
+```
+
+In order to validate the impression, let's overlay both graphs:
+```{r overla activity pattern per weekday type,results="asis"} 
+p1<- qplot(data=summarizeIntervalsPerWeekdayType, 
+      x=toTime(interval), y=activityPerWeekdayTypeAndInterval, 
+      geom="line", color=weekdaytype, 
+      xlab="Daytime (by 5 min intervals)", ylab="Average number of steps per 5 min interval")
+handleStyleAndTime(p1) 
+```
+
+**The conclusions:**
+
+- During the regular weekdays the object of study typically starts walking activity (possible hypothesis: gets up) about 5:30 a.m. and (as mentioned above) the peak of daily walking activity (number of steps per 5 minute interval) is observed between 8:35 AM and 8:40 a.m. There are additional secondary peaks after 12:00 p.m (one possible hypothesis: lunch time)about 16:00 p.m., about 17:30 pm (the possible hypothesis: end of the working day can differ) and around 19:00 p.m. (there could be various explanations).
+   
+- During the weekend days the pattern is different: the day activities more frequently  start after 8:00 a.m.,  there are multiple peaks of activities (walking) not only during the morning hours, but during the afternoon and evening hours, i.e. the weekend walking activity is distributed more evenly during the day hours.
+
+
+
+
+
+
