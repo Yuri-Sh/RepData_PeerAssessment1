@@ -7,7 +7,7 @@ keep_md: true
 
 ## Checking pre-requisites
 Since this study relies upon certain R packages, the missing packages will be 
-automatically installed from the default repository (this is the [reference](http://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them) to the trick.
+automatically installed from the default repository (this is the [reference](http://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them) to the explanation of the trick).
 
 ```{r Checking pre-requisites}
 
@@ -248,12 +248,12 @@ summarizeIntervalsPerWeekdayType <- extendedActivityTblRepaired %>%
 p <- ggplot(summarizeIntervalsPerWeekdayType,
     aes(x=toTime(interval),y=activityPerWeekdayTypeAndInterval))+ geom_line() +
     xlab("Daytime (by 5 min intervals)")+ ylab("Average number of steps per 5 min interval")
-handleStyleAndTime(p) + facet_grid(. ~ weekdaytype)
+handleStyleAndTime(p) + facet_grid(weekdaytype~.)
 
 ```
 
 In order to validate the impression, let's overlay both graphs:
-```{r overlayed activity pattern per weekday type for imputed data,results="asis"} 
+```{r not must overlayed activity pattern per weekday type for imputed data,results="asis"} 
 p1<- qplot(data=summarizeIntervalsPerWeekdayType, 
       x=toTime(interval), y=activityPerWeekdayTypeAndInterval, 
       geom="line", color=weekdaytype, 

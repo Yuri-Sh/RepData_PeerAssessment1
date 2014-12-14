@@ -7,7 +7,7 @@ keep_md: true
 
 ## Checking pre-requisites
 Since this study relies upon certain R packages, the missing packages will be 
-automatically installed from the default repository (this is the [reference](http://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them) to the trick.
+automatically installed from the default repository (this is the [reference](http://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them) to the explanation of the trick).
 
 
 ```r
@@ -113,7 +113,7 @@ print(xtable(stepsummary), type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 01:36:35 2014 -->
+<!-- Mon Dec 15 01:55:07 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> Mean </th> <th> Median </th>  </tr>
   <tr> <td align="right"> Number of steps per day </td> <td align="right"> 10766.19 </td> <td align="right"> 10765.00 </td> </tr>
@@ -198,7 +198,7 @@ print(xtable(as.data.frame(daysWithMissingData)),type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 01:36:35 2014 -->
+<!-- Mon Dec 15 01:55:07 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> date </th> <th> NAsperday </th> <th> weekday </th>  </tr>
   <tr> <td align="right"> 1 </td> <td> 2012-10-01 </td> <td align="right"> 288 </td> <td> Monday </td> </tr>
@@ -236,7 +236,7 @@ print(xtable(as.data.frame(daysActuallyInDataSet)),type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 01:36:35 2014 -->
+<!-- Mon Dec 15 01:55:07 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> WeekdayName </th> <th> count </th>  </tr>
   <tr> <td align="right"> 1 </td> <td> Friday </td> <td align="right">   7 </td> </tr>
@@ -312,7 +312,7 @@ print(xtable(stepsummary), type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 01:36:36 2014 -->
+<!-- Mon Dec 15 01:55:08 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> Mean </th> <th> Median </th>  </tr>
   <tr> <td align="right"> Number of steps per day </td> <td align="right"> 9704.66 </td> <td align="right"> 10395.00 </td> </tr>
@@ -337,7 +337,7 @@ summarizeIntervalsPerWeekdayType <- extendedActivityTblRepaired %>%
 p <- ggplot(summarizeIntervalsPerWeekdayType,
     aes(x=toTime(interval),y=activityPerWeekdayTypeAndInterval))+ geom_line() +
     xlab("Daytime (by 5 min intervals)")+ ylab("Average number of steps per 5 min interval")
-handleStyleAndTime(p) + facet_grid(. ~ weekdaytype)
+handleStyleAndTime(p) + facet_grid(weekdaytype~.)
 ```
 
 ![plot of chunk weekdays and weekends activity pattern comparison for imputed data](figure/weekdays and weekends activity pattern comparison for imputed data-1.png) 
@@ -352,7 +352,7 @@ p1<- qplot(data=summarizeIntervalsPerWeekdayType,
 handleStyleAndTime(p1) 
 ```
 
-![plot of chunk overlayed activity pattern per weekday type for imputed data](figure/overlayed activity pattern per weekday type for imputed data-1.png) 
+![plot of chunk not must overlayed activity pattern per weekday type for imputed data](figure/not must overlayed activity pattern per weekday type for imputed data-1.png) 
 
 **The conclusions:**
 
