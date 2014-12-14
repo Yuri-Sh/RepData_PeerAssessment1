@@ -15,9 +15,9 @@ list.of.packages <- list("data.table",
                          "lubridate","ggplot2","grid","gridExtra","scales",
                          "xtable","dplyr","tidyr")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-librarystr <- function(libname) { invisible(eval(parse(text=sprintf("library(%s)",libname)))) }
-lapply(list.of.packages,librarystr)
+if(length(new.packages)) suppressPackageStartupMessages(install.packages(new.packages))
+librarystr <- function(libname) { invisible(suppressPackageStartupMessages(eval(parse(text=sprintf("library(%s)",libname))))) }
+invisible(lapply(list.of.packages,librarystr))
 ```
 
 For the safety purposes, e.g. missing the source datasource activity.zip or in case the script runs in a wrong 
@@ -113,7 +113,7 @@ print(xtable(stepsummary), type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 01:09:48 2014 -->
+<!-- Mon Dec 15 01:36:35 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> Mean </th> <th> Median </th>  </tr>
   <tr> <td align="right"> Number of steps per day </td> <td align="right"> 10766.19 </td> <td align="right"> 10765.00 </td> </tr>
@@ -198,7 +198,7 @@ print(xtable(as.data.frame(daysWithMissingData)),type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 01:09:49 2014 -->
+<!-- Mon Dec 15 01:36:35 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> date </th> <th> NAsperday </th> <th> weekday </th>  </tr>
   <tr> <td align="right"> 1 </td> <td> 2012-10-01 </td> <td align="right"> 288 </td> <td> Monday </td> </tr>
@@ -236,7 +236,7 @@ print(xtable(as.data.frame(daysActuallyInDataSet)),type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 01:09:49 2014 -->
+<!-- Mon Dec 15 01:36:35 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> WeekdayName </th> <th> count </th>  </tr>
   <tr> <td align="right"> 1 </td> <td> Friday </td> <td align="right">   7 </td> </tr>
@@ -312,7 +312,7 @@ print(xtable(stepsummary), type="html")
 ```
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
-<!-- Mon Dec 15 01:09:49 2014 -->
+<!-- Mon Dec 15 01:36:36 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> Mean </th> <th> Median </th>  </tr>
   <tr> <td align="right"> Number of steps per day </td> <td align="right"> 9704.66 </td> <td align="right"> 10395.00 </td> </tr>

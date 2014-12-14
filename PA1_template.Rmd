@@ -9,15 +9,15 @@ keep_md: true
 Since this study relies upon certain R packages, the missing packages will be 
 automatically installed from the default repository (this is the [reference](http://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them) to the trick.
 
-```{r Checking pre-requisites, results='hide'}
+```{r Checking pre-requisites}
 
 list.of.packages <- list("data.table", 
                          "lubridate","ggplot2","grid","gridExtra","scales",
                          "xtable","dplyr","tidyr")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-librarystr <- function(libname) { invisible(eval(parse(text=sprintf("library(%s)",libname)))) }
-lapply(list.of.packages,librarystr)
+if(length(new.packages)) suppressPackageStartupMessages(install.packages(new.packages))
+librarystr <- function(libname) { invisible(suppressPackageStartupMessages(eval(parse(text=sprintf("library(%s)",libname))))) }
+invisible(lapply(list.of.packages,librarystr))
 
 ```
 
