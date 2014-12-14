@@ -78,7 +78,7 @@ dailyStepsSummary <- dailyActivity  %>%  summarise(nsteps=sum(steps))
 ## What is mean total number of steps taken per day?
 
 Plotting with 2 bin sizes (smaller bins help to see the days with zero or top activity, larger bins show better the smoothered distribution )
-```{r MeanNumberOfStepsPerDayHistogram}
+```{r Mean number of steps per day histogram for raw data}
 
 fineHist<-qplot(nsteps,data=dailyStepsSummary, geom="histogram", 
                 binwidth=5000, main="Daily steps (Bin width = 5000)")
@@ -214,7 +214,7 @@ dailyStepsSummary <- dailyActivity  %>%  summarise(nsteps=sum(steps))
 
 ```
 Now we can recreate the daily steps histogram using the corrected data:
-```{r MeanNumberOfStepsPerDayHistogram1,results="asis"}
+```{r Mean number of steps per day histogram for imputed data,results="asis"}
 
 fineHist<-qplot(nsteps,data=dailyStepsSummary, geom="histogram", 
                 binwidth=5000, main="Daily steps (Bin width = 5000)")
@@ -240,7 +240,7 @@ The following section shows the difference in the activity pattern in the
 ## Are there differences in activity patterns between weekdays and weekends?
 
 The following pair of graphs clearly show different activity patterns:
-```{r weekdays and weekends,results="asis"}
+```{r weekdays and weekends activity pattern comparison for imputed data,results="asis"}
 summarizeIntervalsPerWeekdayType <- extendedActivityTblRepaired %>%
                                 group_by(weekdaytype,interval)  %>% 
                                 summarise(activityPerWeekdayTypeAndInterval=mean(steps, na.rm = TRUE)) 
@@ -255,7 +255,7 @@ handleStyleAndTime(p) + facet_grid(. ~ weekdaytype)
 ```
 
 In order to validate the impression, let's overlay both graphs:
-```{r overla activity pattern per weekday type,results="asis"} 
+```{r overlayed activity pattern per weekday type for imputed data,results="asis"} 
 p1<- qplot(data=summarizeIntervalsPerWeekdayType, 
       x=toTime(interval), y=activityPerWeekdayTypeAndInterval, 
       geom="line", color=weekdaytype, 
